@@ -6,7 +6,7 @@ import (
 )
 
 // Generate wave given args
-// TODO Correct usigned types for args
+// TODO Correct int to usigned types for args
 func GenerateWave(numSamples int, sampleRate int, frequency float64, amplitude float64, data []byte) []byte {
 	for i := 0; i < numSamples; i++ {
 		t := float64(i) / float64(sampleRate)
