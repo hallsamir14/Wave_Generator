@@ -10,12 +10,13 @@ import (
 func main() {
 	//Paramatize these
 	const sampleRate = 44100
-	const frequency = 440.0
+	const frequency = 220.0
 	const amplitude = 0.3
-	const durationSec = 2
+	const durationSec = 4
 
+	// 16-bit PCM (2 bytes per sample)
 	numSamples := sampleRate * durationSec
-	data := make([]byte, numSamples*2) // 16-bit PCM (2 bytes per sample)
+	data := make([]byte, numSamples*2)
 
 	data = generator.GenerateWave(numSamples, sampleRate, frequency, amplitude, data)
 
@@ -31,7 +32,4 @@ func main() {
 
 	//Write PCM data
 	writer.WritePCMData(data, file, err)
-
-	// Play with default media player
-	//exec.Command("cmd", "/C", "start", "tone.wav").Run()
 }
