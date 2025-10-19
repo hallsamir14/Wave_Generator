@@ -5,6 +5,16 @@ import (
 	"os"
 )
 
+/*
+<WAVE-form> → RIFF('WAVE'
+
+	<fmt-ck>            // Format of the file
+	[<fact-ck>]         // Fact chunk
+	[<cue-ck>]          // Cue points
+	[<playlist-ck>]     // Playlist
+	[<assoc-data-list>] // Associated data list
+	<wave-data> )       // Wave data
+*/
 func WriteWavHeader(f *os.File, dataSize uint32, sampleRate int, channels int16, bitsPerSample int16) {
 	var chunkSize = 36 + dataSize
 	var byteRate = sampleRate * int(channels) * int(bitsPerSample) / 8
