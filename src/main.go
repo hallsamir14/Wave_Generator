@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"wave_generator/generator"
 	"wave_generator/writer"
 )
@@ -15,13 +17,21 @@ func main() {
 	const durationSec = 4
 
 	// 16-bit PCM (2 bytes per sample)
-	numSamples := sampleRate * durationSec
+	numSamples := uint(sampleRate * durationSec)
 	data := make([]byte, numSamples*2)
-
 	data = generator.GenerateWave(numSamples, sampleRate, frequency, amplitude, data)
 
+	dir := "tones"
+	filename := "tones.wav"
+	filePath := filepath.Join(dir, filename)
+
+	err := os.MkdirAll(filepath.Dir(filePath), 0755)
+	if err != nil {
+		fmt.Println("Error occured creating directory")
+	}
+
 	// Create WAV file
-	file, err := os.Create("tone.wav")
+	file, err := os.Create(filePath)
 	if err != nil {
 		log.Fatal(err)
 	}
