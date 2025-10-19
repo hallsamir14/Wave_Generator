@@ -8,6 +8,8 @@ import (
 	"testing"
 )
 
+//TODO review suite
+
 func TestWriteWavHeader(t *testing.T) {
 	// Parameters to pass to WriteWavHeader
 	var dataSize uint32 = 1000
