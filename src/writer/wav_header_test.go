@@ -42,7 +42,7 @@ func TestWriteWavHeader_WithPipe(t *testing.T) {
 
 			/*Write the header into the writer end of the pipe.
 			Using an os.Pipe provides us a *os.File (writer) to inject,
-			 while allowing us to read the bytes off the reader for assertions.
+			while allowing us to read the bytes off the reader for assertions.
 			*/
 			WriteWavHeader(w, tc.dataSize, tc.sampleRate, tc.channels, tc.bitsPerSample)
 
