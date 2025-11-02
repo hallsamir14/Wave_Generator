@@ -8,13 +8,15 @@ import (
 )
 
 func TestWriteWavHeader_WithPipe(t *testing.T) {
-	tests := []struct {
+	type tc struct {
 		name          string
 		dataSize      uint32
 		sampleRate    int
 		channels      int16
 		bitsPerSample int16
-	}{
+	}
+
+	cases := []tc{
 		{
 			name:          "stereo 16-bit",
 			dataSize:      1234,
@@ -31,16 +33,17 @@ func TestWriteWavHeader_WithPipe(t *testing.T) {
 		},
 	}
 
-	for _, tc := range tests {
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			r, w, err := os.Pipe()
 			if err != nil {
 				t.Fatalf("os.Pipe() error: %v", err)
 			}
 
-			// Write the header into the writer end of the pipe.
-			// Using an os.Pipe provides us a *os.File (writer) to inject,
-			// while allowing us to read the bytes off the reader for assertions.
+			/*Write the header into the writer end of the pipe.
+			Using an os.Pipe provides us a *os.File (writer) to inject,
+			 while allowing us to read the bytes off the reader for assertions.
+			*/
 			WriteWavHeader(w, tc.dataSize, tc.sampleRate, tc.channels, tc.bitsPerSample)
 
 			// close writer so ReadAll will get EOF after the written bytes
