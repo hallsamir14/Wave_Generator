@@ -1,7 +1,7 @@
 #TODO
 (10/26/25)
-- Read generator test cases
-- Read wav_header test cases
+- ~~Read generator test cases~~
+- ~~Read wav_header test cases~~
 - Review and cleanup generator module
 - Cleanup main function
 
