@@ -6,21 +6,29 @@ import (
 	"math"
 )
 
+type Waveform int
+
+const (
+	Sine Waveform = iota
+	Square
+	Triangle
+)
+
 // Generate wave given args
 // TODO anyway to reduce repitition here?
 /*
 waveData params:
 numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte,
 */
-func GenerateWave(waveType string, numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) ([]byte, error) {
+func GenerateWave(waveType Waveform, numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) ([]byte, error) {
 	clampAmplitude(&amplitude)
 
 	switch waveType {
-	case "Sin":
+	case Sine:
 		return generateSinWave(numSamples, sampleRate, frequency, amplitude, data), nil
-	case "Square":
+	case Square:
 		return generateSquareWave(numSamples, sampleRate, frequency, amplitude, data), nil
-	case "Triangle":
+	case Triangle:
 		return generateTriangleWave(numSamples, sampleRate, frequency, amplitude, data), nil
 	}
 	return nil, errors.New("invalid wave type")
