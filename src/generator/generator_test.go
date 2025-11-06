@@ -21,7 +21,7 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 
 	type tc struct {
 		name       string
-		waveType   string
+		waveType   Waveform
 		numSamples uint
 		sampleRate uint
 		freq       float64
@@ -33,17 +33,8 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 
 	cases := []tc{
 		{
-			name:       "invalid wave type returns error",
-			waveType:   "Invalid",
-			numSamples: 4,
-			sampleRate: 8,
-			freq:       1.0,
-			amp:        1.0,
-			wantErr:    true,
-		},
-		{
 			name:       "sin basic deterministic samples",
-			waveType:   "Sin",
+			waveType:   Sine,
 			numSamples: 8,
 			sampleRate: 8,
 			freq:       1.0,
@@ -57,7 +48,7 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 		},
 		{
 			name:       "triangle 4-sample period values (implementation-specific)",
-			waveType:   "Triangle",
+			waveType:   Triangle,
 			numSamples: 4,
 			sampleRate: 4,
 			freq:       1.0,
@@ -73,7 +64,7 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 		},
 		{
 			name:       "square full amplitude",
-			waveType:   "Square",
+			waveType:   Square,
 			numSamples: 4,
 			sampleRate: 4,
 			freq:       1.0,
@@ -87,7 +78,7 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 		},
 		{
 			name:       "square half amplitude",
-			waveType:   "Square",
+			waveType:   Square,
 			numSamples: 4,
 			sampleRate: 4,
 			freq:       1.0,
@@ -101,7 +92,7 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 		},
 		{
 			name:       "sin sample range smoke",
-			waveType:   "Sin",
+			waveType:   Sine,
 			numSamples: 100,
 			sampleRate: 44100,
 			freq:       440.0,
