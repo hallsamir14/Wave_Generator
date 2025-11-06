@@ -1,9 +1,14 @@
 #TODO
+(11/5/25):
+- Implement stateful generator (retain state for each instance)
+- Refactor to seperate numeric samples and byte encoding
+- Implement `Generate` method for generator struct
+
 (10/26/25)
 - ~~Read generator test cases~~
 - ~~Read wav_header test cases~~
-- Review and cleanup generator module
-- Cleanup main function
+- ~~Review and cleanup generator module~~
+- ~~Cleanup main function~~
 
 (10/19/25)
 - ~~Continue implementing functionaly to generate different wave forms~~
