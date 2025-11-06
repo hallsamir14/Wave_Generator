@@ -5,8 +5,6 @@ import (
 	"testing"
 )
 
-//TODO review suite
-
 func TestWritePCMData(t *testing.T) {
 	// Prepare sample data
 	mock_data := []byte{0x01, 0x02, 0x03, 0x04}
