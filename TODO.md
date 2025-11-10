@@ -1,8 +1,11 @@
 #TODO
+(11/9/25):
+- Review and refine `generator.go` module
+
 (11/5/25):
-- Implement stateful generator (retain state for each instance)
-- Refactor to seperate numeric samples and byte encoding
-- Implement `Generate` method for generator struct
+- ~~Implement stateful generator (retain state for each instance)~~
+- ~~Refactor to seperate numeric samples and byte encoding~~
+- ~~Implement `Generate` method for generator struct~~
 
 (10/26/25)
 - ~~Read generator test cases~~
