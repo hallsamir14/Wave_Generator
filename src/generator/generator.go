@@ -6,6 +6,7 @@ import (
 	"math"
 )
 
+// Waveform represents the waveform type to synthesize.
 type Waveform int
 
 const (
@@ -14,105 +15,155 @@ const (
 	Triangle
 )
 
-// Generate wave given args
-// TODO anyway to reduce repitition here?
+// WaveGenerator generates audio samples and maintains phase continuity between calls.
+type WaveGenerator struct {
+	SampleRate int     // samples per second, e.g. 44100
+	Frequency  float64 // Hz
+	Amplitude  float64 // 0..1
+	Phase      float64 // 0..1 (fractional phase within period)
+	Waveform   Waveform
+}
+
+// NewWaveGenerator returns a configured generator. Amplitude is clamped [0,1].
+func NewWaveGenerator(sampleRate int, freq float64, amp float64, wf Waveform) *WaveGenerator {
+	if sampleRate <= 0 {
+		sampleRate = 44100
+	}
+	return &WaveGenerator{
+		SampleRate: sampleRate,
+		Frequency:  freq,
+		Amplitude:  clamp(amp, 0.0, 1.0),
+		Phase:      0.0,
+		Waveform:   wf,
+	}
+}
+
 /*
-waveData params:
-numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte,
+GenerateWave is a convenience wrapper that constructs a temporary WaveGenerator and writes
+samples into the provided byte buffer. It's a simple stateless helper.
+Stateless generator,generates single chuck of audio
 */
-func GenerateWave(waveType Waveform, numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) ([]byte, error) {
-	clampAmplitude(&amplitude)
 
-	switch waveType {
-	case Sine:
-		return generateSinWave(numSamples, sampleRate, frequency, amplitude, data), nil
-	case Square:
-		return generateSquareWave(numSamples, sampleRate, frequency, amplitude, data), nil
-	case Triangle:
-		return generateTriangleWave(numSamples, sampleRate, frequency, amplitude, data), nil
+func GenerateWave(wf Waveform, numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) ([]byte, error) {
+	// Validate byte buffer
+	if int(numSamples)*2 > len(data) {
+		return nil, errors.New("data buffer too small for requested number of samples")
 	}
-	return nil, errors.New("invalid wave type")
+	g := NewWaveGenerator(int(sampleRate), frequency, amplitude, wf)
+	if err := g.generateToPCMBytes(int(numSamples), data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
-func clampAmplitude(amplitude *float64) {
-	// clamp amplitude to [0,1] to avoid clipping
-	if *amplitude < 0 {
-		*amplitude = 0
+/*
+GenerateInt16 fills the provided output slice with `numSamples` int16 samples.
+len(out) must be >= numSamples. Returns an error on invalid inputs.
+Generate audio in chucnks - continous audio
+*/
+func (g *WaveGenerator) GenerateInt16(numSamples int, out []int16) error {
+	if numSamples < 0 {
+		return errors.New("numSamples must be non-negative")
 	}
-	if *amplitude > 1 {
-		*amplitude = 1
+	if g.SampleRate <= 0 {
+		return errors.New("invalid sample rate")
 	}
-}
-func generateSinWave(numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) []byte {
+	if len(out) < numSamples {
+		return errors.New("output slice too small")
+	}
 
-	maxInt16 := float64(math.MaxInt16)
-	for i := uint(0); i < numSamples; i++ {
-		t := float64(i) / float64(sampleRate)
-		sample := amplitude * math.Sin(2*math.Pi*frequency*t)
-		intSample := int16(sample * maxInt16)
-		offset := i * 2
-		binary.LittleEndian.PutUint16(data[offset:], uint16(intSample))
-	}
-	return data
-}
-func generateTriangleWave(numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) []byte {
-
-	//Use a phase accumlator to avoid expensive math.Mod each sample
-	phase := 0.0
-	phaseInc := frequency / float64(sampleRate) // increment per sample (wraps at 1.0)
+	phaseStep := g.Frequency / float64(g.SampleRate)
 	maxInt16 := float64(math.MaxInt16)
 
-	for i := uint(0); i < numSamples; i++ {
-		/*triangle wave (range -1..1):
-		triangle(phase) = 4*abs(phase - 0.5) - 1
-		where phase is [0,1)
-		*/
-		waveformValue := 4*math.Abs(phase-0.5) - 1.0
+	for i := 0; i < numSamples; i++ {
+		var normalizedSample float64 // -1..+1
 
-		// scale by amplitude and convert to 16-bit signed
-		intSample := int16(waveformValue * amplitude * maxInt16)
-
-		// write little-endian
-		offset := i * 2
-		binary.LittleEndian.PutUint16(data[offset:offset+2], uint16(intSample))
-
-		// robust wrap for large phaseInc
-		phase += phaseInc
-		if phase >= 1.0 {
-			phase -= math.Floor(phase)
-		}
-	}
-	return data
-}
-
-func generateSquareWave(numSamples uint, sampleRate uint, frequency float64, amplitude float64, data []byte) []byte {
-
-	phase := 0.0
-	phaseInc := frequency / float64(sampleRate) // increment per sample (wraps at 1.0)
-	maxInt16 := float64(math.MaxInt16)
-
-	for i := uint(0); i < numSamples; i++ {
-		// Square: +1 for first half of period, -1 for second half
-		var waveformValue float64
-		if phase < 0.5 {
-			waveformValue = 1.0
-		} else {
-			waveformValue = -1.0
+		switch g.Waveform {
+		case Sine:
+			// sine: sin(2*pi*phase)
+			normalizedSample = math.Sin(2.0 * math.Pi * g.Phase)
+		case Triangle:
+			// triangle (range -1..+1): corrected formula
+			normalizedSample = 1.0 - 4.0*math.Abs(g.Phase-0.5)
+		case Square:
+			// 50% duty square: +1 for first half, -1 for second half
+			if g.Phase < 0.5 {
+				normalizedSample = 1.0
+			} else {
+				normalizedSample = -1.0
+			}
+		default:
+			return errors.New("unsupported waveform")
 		}
 
-		// Scale by amplitude and convert to 16-bit signed
-		intSample := int16(waveformValue * amplitude * maxInt16)
+		// scale by amplitude and convert to int16
+		intSample := int16(normalizedSample * g.Amplitude * maxInt16)
+		out[i] = intSample
 
-		// write little-endian
-		offset := i * 2
-		binary.LittleEndian.PutUint16(data[offset:offset+2], uint16(intSample))
-
-		// increment & robust wrap for large phaseInc
-		phase += phaseInc
-		if phase >= 1.0 {
-			phase -= math.Floor(phase)
+		// advance phase and wrap robustly
+		g.Phase += phaseStep
+		if g.Phase >= 1.0 {
+			g.Phase -= math.Floor(g.Phase)
 		}
 	}
 
-	return data
+	return nil
+}
+
+// GenerateToPCMBytes writes numSamples 16-bit little-endian PCM samples directly into out byte buffer.
+// out must have length >= numSamples*2.
+func (g *WaveGenerator) generateToPCMBytes(numSamples int, out []byte) error {
+	if numSamples < 0 {
+		return errors.New("numSamples must be non-negative")
+	}
+	if g.SampleRate <= 0 {
+		return errors.New("invalid sample rate")
+	}
+	if len(out) < numSamples*2 {
+		return errors.New("output byte buffer too small")
+	}
+
+	phaseStep := g.Frequency / float64(g.SampleRate)
+	maxInt16 := float64(math.MaxInt16)
+
+	for i := 0; i < numSamples; i++ {
+		var normalizedSample float64
+
+		switch g.Waveform {
+		case Sine:
+			normalizedSample = math.Sin(2.0 * math.Pi * g.Phase)
+		case Triangle:
+			normalizedSample = 1.0 - 4.0*math.Abs(g.Phase-0.5)
+		case Square:
+			if g.Phase < 0.5 {
+				normalizedSample = 1.0
+			} else {
+				normalizedSample = -1.0
+			}
+		default:
+			return errors.New("unsupported waveform")
+		}
+
+		intSample := int16(normalizedSample * g.Amplitude * maxInt16)
+		offset := i * 2
+		binary.LittleEndian.PutUint16(out[offset:offset+2], uint16(intSample))
+
+		g.Phase += phaseStep
+		if g.Phase >= 1.0 {
+			g.Phase -= math.Floor(g.Phase)
+		}
+	}
+
+	return nil
+}
+
+// clamp clamps v to [lo, hi].
+func clamp(v, lo, hi float64) float64 {
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
+	return v
 }
