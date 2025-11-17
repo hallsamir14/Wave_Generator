@@ -1,7 +1,10 @@
 #TODO
+(11/16/25):
+- Update test suite for `generator` module to test for stateful generation
+- Review `generator_test.go:134: case "triangle 4-sample period values (implementation-specific)"`: sample[0] = -32767, want 32767
+
 (11/9/25):
 - ~~Review and refine `generator.go` module~~
-- Refactor test suite for generator module
 
 (11/5/25):
 - ~~Implement stateful generator (retain state for each instance)~~
