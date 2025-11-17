@@ -1,6 +1,7 @@
 #TODO
 (11/9/25):
-- Review and refine `generator.go` module
+- ~~Review and refine `generator.go` module~~
+- Refactor test suite for generator module
 
 (11/5/25):
 - ~~Implement stateful generator (retain state for each instance)~~
