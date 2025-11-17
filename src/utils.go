@@ -29,6 +29,10 @@ func writeFile(sampleRate int, data []byte) error {
 	// Create WAV file
 	file, err := os.Create(filePath)
 
+	if err != nil {
+		log.Fatal(err)
+		return err
+	}
 	defer file.Close()
 
 	// Write WAV header
@@ -36,10 +40,6 @@ func writeFile(sampleRate int, data []byte) error {
 
 	//Write PCM data
 	writer.WritePCMData(data, file, err)
-
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	return err
 
