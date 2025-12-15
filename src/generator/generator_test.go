@@ -53,12 +53,12 @@ func TestGenerateWave_TableDriven(t *testing.T) {
 			sampleRate: 4,
 			freq:       1.0,
 			amp:        1.0,
-			// current implementation: waveformValue := 4*abs(phase-0.5) - 1
-			// phases: 0, 0.25, 0.5, 0.75 -> +1, 0, -1, 0
+			// current implementation: waveformValue :=1.0 - 4.0*math.Abs(g.Phase-0.5)
+			// phases: 0, 0.25, 0.5, 0.75 -> -1, 0, +1, 0
 			expect: expectMap{
-				0: Max,
+				0: -1 * Max,
 				1: 0,
-				2: int16(-Max),
+				2: int16(Max),
 				3: 0,
 			},
 		},
