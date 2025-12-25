@@ -1,7 +1,13 @@
 #TODO
+(12/14/25):
+- Wrtie PCM data returned from `GenerateInt16()` to a file
+    - Generalize `writer/pcm_header` interface
+    - Implement in `main()`
+- Write test cases for `GenerateInt16()` - Only needs 1???
+
 (11/16/25):
-- Update test suite for `generator` module to test for stateful generation
-- Review `generator_test.go:134: case "triangle 4-sample period values (implementation-specific)"`: sample[0] = -32767, want 32767
+- ~~Update test suite for `generator` module to test for stateful generation~~
+- ~~Review `generator_test.go:134: case "triangle 4-sample period values (implementation-specific)"`: sample[0] = -32767, want 32767~~
 
 (11/9/25):
 - ~~Review and refine `generator.go` module~~
